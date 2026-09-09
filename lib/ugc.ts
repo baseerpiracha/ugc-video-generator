@@ -2,7 +2,9 @@ import { z } from 'zod';
 import * as cheerio from 'cheerio';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { execFile } from 'child_process';
+import { put } from '@vercel/blob';
 
 const ffmpegPath = (() => {
   try {
@@ -88,7 +90,7 @@ export async function fetchWebsiteContent(rawUrl: string) {
         const contentType = imageResponse.headers.get('content-type') || '';
         if (imageResponse.ok && contentType.startsWith('image/')) {
           const extension = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
-          const imageDirectory = path.join(process.cwd(), 'public', 'generated', 'product-images');
+          const imageDirectory = path.join(process.env.VERCEL ? os.tmpdir() : path.join(process.cwd(), 'public', 'generated'), 'product-images');
           fs.mkdirSync(imageDirectory, { recursive: true });
           productImagePath = path.join(imageDirectory, `product-${Buffer.from(url.hostname).toString('hex').slice(0, 16)}.${extension}`);
           fs.writeFileSync(productImagePath, Buffer.from(await imageResponse.arrayBuffer()));
@@ -283,7 +285,7 @@ export async function renderVideo(creative: {
   await ensureAssetLibrary();
 
   const safeName = creative.productName.replace(/[^a-z0-9]+/gi, '-').toLowerCase().slice(0, 40) || 'ugc-video';
-  const outputDir = path.join(process.cwd(), 'public', 'generated');
+  const outputDir = process.env.VERCEL ? os.tmpdir() : path.join(process.cwd(), 'public', 'generated');
   fs.mkdirSync(outputDir, { recursive: true });
 
   const outputPath = path.join(outputDir, `${safeName}-${Date.now()}.mp4`);
@@ -333,6 +335,18 @@ export async function renderVideo(creative: {
       }
     );
   });
+
+  if (process.env.VERCEL) {
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      throw new Error('BLOB_READ_WRITE_TOKEN is required for Vercel video storage.');
+    }
+
+    const blob = await put(`ugc-videos/${path.basename(outputPath)}`, fs.readFileSync(outputPath), {
+      access: 'public',
+      addRandomSuffix: false,
+    });
+    return blob.url;
+  }
 
   return `/api/video/${path.basename(outputPath)}`;
 }
