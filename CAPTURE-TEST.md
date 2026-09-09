@@ -1,0 +1,1 @@
+﻿# Capture Test\n\nThis project is for the 8x Engineering assignment: UGC Video Generator.\n\n- Agent capture setup remains active.\n- .agent-logs/ is tracked and kept alongside code changes.\n- The app should support URL-based UGC generation end-to-end.\n
