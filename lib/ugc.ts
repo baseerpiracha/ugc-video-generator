@@ -219,7 +219,7 @@ function chooseAvailableAsset(chosen: string, kind: 'background' | 'gif' | 'audi
 }
 
 async function ensureAssetLibrary() {
-  const base = path.join(process.cwd(), 'public', 'assets');
+  const base = process.env.VERCEL ? path.join(os.tmpdir(), 'ugc-assets') : path.join(process.cwd(), 'public', 'assets');
   const folders = {
     backgrounds: path.join(base, 'backgrounds'),
     gifs: path.join(base, 'gifs'),
@@ -289,13 +289,14 @@ export async function renderVideo(creative: {
   fs.mkdirSync(outputDir, { recursive: true });
 
   const outputPath = path.join(outputDir, `${safeName}-${Date.now()}.mp4`);
-  const bgPath = path.join(process.cwd(), 'public', 'assets', 'backgrounds', `${creative.backgroundAsset}.mp4`);
-  const gifPath = path.join(process.cwd(), 'public', 'assets', 'gifs', `${creative.gifAsset}.gif`);
-  const audioPath = path.join(process.cwd(), 'public', 'assets', 'audio', `${creative.audioAsset}.mp3`);
+  const assetRoot = process.env.VERCEL ? path.join(os.tmpdir(), 'ugc-assets') : path.join(process.cwd(), 'public', 'assets');
+  const bgPath = path.join(assetRoot, 'backgrounds', `${creative.backgroundAsset}.mp4`);
+  const gifPath = path.join(assetRoot, 'gifs', `${creative.gifAsset}.gif`);
+  const audioPath = path.join(assetRoot, 'audio', `${creative.audioAsset}.mp3`);
 
-  const availableBg = fs.existsSync(bgPath) ? bgPath : path.join(process.cwd(), 'public', 'assets', 'backgrounds', 'bg-ugc-motion.mp4');
-  const availableGif = fs.existsSync(gifPath) ? gifPath : path.join(process.cwd(), 'public', 'assets', 'gifs', 'gif-ugc-accent.gif');
-  const availableAudio = fs.existsSync(audioPath) ? audioPath : path.join(process.cwd(), 'public', 'assets', 'audio', 'audio-ugc-beat.mp3');
+  const availableBg = fs.existsSync(bgPath) ? bgPath : path.join(assetRoot, 'backgrounds', 'bg-ugc-motion.mp4');
+  const availableGif = fs.existsSync(gifPath) ? gifPath : path.join(assetRoot, 'gifs', 'gif-ugc-accent.gif');
+  const availableAudio = fs.existsSync(audioPath) ? audioPath : path.join(assetRoot, 'audio', 'audio-ugc-beat.mp3');
   const productImagePath = creative.productImagePath && fs.existsSync(creative.productImagePath) ? creative.productImagePath : '';
 
   const ffmpeg = ffmpegPath || 'ffmpeg';
