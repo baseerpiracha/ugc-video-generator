@@ -304,9 +304,17 @@ export async function renderVideo(creative: {
   const productImagePath = creative.productImagePath && fs.existsSync(creative.productImagePath) ? creative.productImagePath : '';
 
   const ffmpeg = ffmpegPath || 'ffmpeg';
-  const hookText = escapeFilterText(creative.hook);
-  const subtitleText = escapeFilterText(creative.script[1] || 'This is the moment.');
-  const productText = escapeFilterText(creative.productName);
+  const textDirectory = path.join(process.env.VERCEL ? os.tmpdir() : outputDir, 'ugc-text');
+  fs.mkdirSync(textDirectory, { recursive: true });
+  const hookTextPath = path.join(textDirectory, `${safeName}-hook.txt`);
+  const subtitleTextPath = path.join(textDirectory, `${safeName}-subtitle.txt`);
+  const productTextPath = path.join(textDirectory, `${safeName}-product.txt`);
+  fs.writeFileSync(hookTextPath, creative.hook);
+  fs.writeFileSync(subtitleTextPath, creative.script[1] || 'This is the moment.');
+  fs.writeFileSync(productTextPath, creative.productName);
+  const hookTextFile = escapeFilterText(hookTextPath);
+  const subtitleTextFile = escapeFilterText(subtitleTextPath);
+  const productTextFile = escapeFilterText(productTextPath);
 
   await new Promise<void>((resolve, reject) => {
     execFile(
@@ -321,9 +329,9 @@ export async function renderVideo(creative: {
         '-i', availableAudio,
         ...(productImagePath ? ['-loop', '1', '-i', productImagePath] : []),
         '-filter_complex',
-        `${productImagePath ? `[0:v]scale=1080:1920,setsar=1[base];[3:v]scale=760:560:force_original_aspect_ratio=decrease,setsar=1[product];[base][product]overlay=(W-w)/2:760:enable='between(t,0,${creative.duration})'[bg]` : '[0:v]scale=1080:1920,setsar=1[bg]'};[1:v]scale=280:280,format=rgba,setsar=1[gif];[bg][gif]overlay=W-w-70:330:enable='between(t,0.5,${creative.duration})'[v];[v]drawtext=text='${hookText}':fontcolor=white:fontsize=62:box=1:boxcolor=0x11182799:boxborderw=18:x=(w-text_w)/2:y=h*0.18:enable='between(t,0.5,3.5)'` +
-          `,drawtext=text='${subtitleText}':fontcolor=white:fontsize=46:box=1:boxcolor=0x11182799:boxborderw=16:x=(w-text_w)/2:y=h*0.84:enable='between(t,2.0,7.5)'` +
-          `,drawtext=text='${productText}':fontcolor=0xf9a8d4:fontsize=34:box=1:boxcolor=0x11182799:boxborderw=14:x=(w-text_w)/2:y=h*0.92:enable='between(t,3.5,8.5)'[outv]`,
+        `${productImagePath ? `[0:v]scale=1080:1920,setsar=1[base];[3:v]scale=760:560:force_original_aspect_ratio=decrease,setsar=1[product];[base][product]overlay=(W-w)/2:760:enable='between(t,0,${creative.duration})'[bg]` : '[0:v]scale=1080:1920,setsar=1[bg]'};[1:v]scale=280:280,format=rgba,setsar=1[gif];[bg][gif]overlay=W-w-70:330:enable='between(t,0.5,${creative.duration})'[v];[v]drawtext=textfile='${hookTextFile}':fontcolor=white:fontsize=62:box=1:boxcolor=0x11182799:boxborderw=18:x=(w-text_w)/2:y=h*0.18:enable='between(t,0.5,3.5)'` +
+          `,drawtext=textfile='${subtitleTextFile}':fontcolor=white:fontsize=46:box=1:boxcolor=0x11182799:boxborderw=16:x=(w-text_w)/2:y=h*0.84:enable='between(t,2.0,7.5)'` +
+          `,drawtext=textfile='${productTextFile}':fontcolor=0xf9a8d4:fontsize=34:box=1:boxcolor=0x11182799:boxborderw=14:x=(w-text_w)/2:y=h*0.92:enable='between(t,3.5,8.5)'[outv]`,
         '-map', '[outv]',
         '-map', '2:a',
         '-t', String(creative.duration),
