@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { extractUrlFromMessage, fetchWebsiteContent, analyzeProduct, generateCreative, renderVideo } from '@/lib/ugc';
 
+export const maxDuration = 60;
+
 const requestSchema = z.object({
   message: z.string().min(1).max(4000),
 });

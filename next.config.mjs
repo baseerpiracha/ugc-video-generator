@@ -5,6 +5,12 @@ const nextConfig = {
     serverActions: {
       allowedOrigins: ['*'],
     },
+    outputFileTracingIncludes: {
+      '/*': [
+        './node_modules/ffmpeg-static/ffmpeg',
+        './node_modules/ffmpeg-static/ffmpeg.exe',
+      ],
+    },
   },
 };
 
