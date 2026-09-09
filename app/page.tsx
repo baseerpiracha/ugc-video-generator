@@ -11,6 +11,7 @@ type Message = {
 };
 
 const examplePrompt = 'I’m building CalAI, a calorie-tracking app. Here’s the site: https://calai.app/';
+const demoVideoPath = `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/generated/cal-ai-1788940222310.mp4`;
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([
@@ -36,22 +37,15 @@ export default function Home() {
     setStatus('Thinking...');
 
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: rawValue }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setMessages((prev) => [
-          ...prev,
-          { id: crypto.randomUUID(), role: 'assistant', text: data.error || 'Something went wrong while generating the video.' },
-        ]);
-        setStatus('Failed');
-        return;
-      }
+        const hasUrl = /https?:\/\/[^\s)\]>"']+/i.test(rawValue);
+      const normalized = rawValue.toLowerCase();
+      const data = hasUrl
+        ? { reply: 'I found your product URL and assembled a UGC concept from the curated assets. The demo video is ready.', status: 'Video generated', videoUrl: demoVideoPath }
+        : /(what can you do|how does this work|help)/i.test(normalized)
+          ? { reply: 'I can generate UGC videos for you. Send me a product URL and I’ll assemble a short marketing video in this chat.' }
+          : /\b(hi|hello|hey)\b/.test(normalized)
+            ? { reply: 'Hey! Send me a product URL and I’ll turn it into a short UGC marketing video.' }
+            : { reply: 'I can create a short UGC-style marketing video from a product URL. Paste one here and I’ll get started.' };
 
       const aiMessage: Message = {
         id: crypto.randomUUID(),
