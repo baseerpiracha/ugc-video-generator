@@ -269,7 +269,11 @@ async function ensureAssetLibrary() {
 }
 
 function escapeFilterText(value: string) {
-  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/:/g, '\\:')
+    .replace(/,/g, '\\,')
+    .replace(/'/g, "\\'");
 }
 
 export async function renderVideo(creative: {

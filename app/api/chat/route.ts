@@ -52,10 +52,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('chat api error', error);
     return NextResponse.json(
-      {
-        error: 'I could not generate a video for that URL. Please try a different public product page or a valid URL.',
-        detail: process.env.NODE_ENV === 'production' && process.env.VERCEL ? String(error instanceof Error ? error.message : error) : undefined,
-      },
+      { error: 'I could not generate a video for that URL. Please try a different public product page or a valid URL.' },
       { status: 500 }
     );
   }
