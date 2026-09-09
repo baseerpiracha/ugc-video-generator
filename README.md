@@ -26,7 +26,8 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000
+Open http://localhost:3003
+Link:https://ugc-video-generator-pi.vercel.app/
 
 ## Required environment variables
 
