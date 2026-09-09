@@ -342,10 +342,10 @@ export async function renderVideo(creative: {
     }
 
     const blob = await put(`ugc-videos/${path.basename(outputPath)}`, fs.readFileSync(outputPath), {
-      access: 'public',
+      access: 'private',
       addRandomSuffix: false,
     });
-    return blob.url;
+    return `/api/video/blob?pathname=${encodeURIComponent(blob.pathname)}`;
   }
 
   return `/api/video/${path.basename(outputPath)}`;
